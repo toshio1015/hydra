@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import nevergrad as ng
 import pytest  # type: ignore
 from omegaconf import DictConfig, OmegaConf
 
+import nevergrad as ng
 from hydra.core.plugins import Plugins
 from hydra.plugins.sweeper import Sweeper
 from hydra.test_utils.test_utils import TSweepRunner, chdir_plugin_root
