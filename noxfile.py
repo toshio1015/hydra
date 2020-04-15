@@ -28,6 +28,7 @@ SKIP_CORE_TESTS = os.environ.get("SKIP_CORE_TESTS", SKIP_CORE_TESTS) != "0"
 
 VERBOSE = os.environ.get("VERBOSE", "0")
 SILENT = VERBOSE == "0"
+FIX = os.environ.get("FIX", "0") == "1"
 
 
 def get_current_os() -> str:
@@ -42,6 +43,7 @@ print(f"NOX_PYTHON_VERSIONS\t:\t{PYTHON_VERSIONS}")
 print(f"PLUGINS\t\t\t:\t{PLUGINS}")
 print(f"SKIP_CORE_TESTS\t\t:\t{SKIP_CORE_TESTS}")
 print(f"VERBOSE\t\t\t:\t{VERBOSE}")
+print(f"FIX\t\t\t:\t{FIX}")
 
 
 def find_python_files(folder):
@@ -95,15 +97,17 @@ def select_plugins(session):
     """
 
     assert session.python is not None, "Session python version is not specified"
-
+    blacklist = [".isort.cfg"]
     example_plugins = [
         {"name": x, "path": "examples/{}".format(x)}
         for x in sorted(os.listdir(os.path.join(BASE, "plugins/examples")))
+        if x not in blacklist
     ]
     plugins = [
         {"name": x, "path": x}
         for x in sorted(os.listdir(os.path.join(BASE, "plugins")))
         if x != "examples"
+        if x not in blacklist
     ]
     available_plugins = plugins + example_plugins
 
@@ -199,13 +203,19 @@ def lint_plugins(session):
     # Mypy for plugins
     for plugin in plugins:
         session.chdir(os.path.join("plugins", plugin["path"]))
-        session.run("black", "--check", ".", silent=SILENT)
-        session.run("isort", "--check", "--diff", ".", silent=SILENT)
-        session.run("mypy", ".", "--strict", silent=SILENT)
+        blackcmd = ["black", "."]
+        isortcmd = ["isort", "."]
+        if not FIX:
+            blackcmd += ["--check"]
+            isortcmd += ["--check", "--diff"]
+        session.run(*blackcmd, silent=SILENT)
+        session.run(*isortcmd, silent=SILENT)
+
         session.chdir(BASE)
 
+    session.run("mypy", ".", "--strict", silent=SILENT)
 
-@nox.session(python=PYTHON_VERSIONS)
+
 @nox.parametrize(
     "install_cmd",
     PLUGINS_INSTALL_COMMANDS,
