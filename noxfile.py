@@ -221,9 +221,7 @@ def test_core(session, install_cmd):
     run_pytest(session, "tests/test_plugins/discovery_test_plugin", "--noconftest")
 
     # run namespace config loader tests
-    run_pytest(
-        session, "tests/test_plugins/namespace_pkg_config_source_test", "--noconftest"
-    )
+    run_pytest(session, "tests/test_plugins/namespace_pkg_config_source_test")
 
     # Install and test example app
     session.run(*install_cmd, "examples/advanced/hydra_app_example", silent=SILENT)
